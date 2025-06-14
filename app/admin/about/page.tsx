@@ -672,7 +672,7 @@ const AboutAdmin = () => {
                     </Box>
 
                     <Grid container spacing={3} component="div">
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }} component="div">
                         <AdminFormField
                           label="Company"
                           id={`company-${index}`}
@@ -681,7 +681,7 @@ const AboutAdmin = () => {
                           placeholder="Company name"
                         />
                       </Grid>
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }} component="div">
                         <AdminFormField
                           label="Position"
                           id={`position-${index}`}
@@ -690,7 +690,7 @@ const AboutAdmin = () => {
                           placeholder="Job title"
                         />
                       </Grid>
-                      <Grid item xs={12} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} component="div">
                         <AdminFormField
                           label="Duration"
                           id={`duration-${index}`}
