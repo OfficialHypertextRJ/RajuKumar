@@ -10,6 +10,17 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Fix the specific case where both sx and xs/md props are present
+content = content.replace(/<Grid sx={{ gridColumn: 'span 12' }} xs={6} md={4}([^>]*?)>/g, 
+                         '<Grid sx={{ gridColumn: { xs: \'span 6\', md: \'span 4\' } }}$1>');
+
+// Fix other cases where both sx and xs/md props might be present
+content = content.replace(/<Grid sx={{ gridColumn: 'span 12' }} xs={([0-9]+)}([^>]*?)>/g, 
+                         '<Grid sx={{ gridColumn: \'span $1\' }}$2>');
+
+content = content.replace(/<Grid sx={{ gridColumn: 'span 12' }} xs={([0-9]+)} md={([0-9]+)}([^>]*?)>/g, 
+                         '<Grid sx={{ gridColumn: { xs: \'span $1\', md: \'span $2\' } }}$3>');
+
 // Replace specific problematic Grid components first
 const specificReplacements = [
   {
