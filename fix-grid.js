@@ -5,12 +5,43 @@ const path = require('path');
 const filePath = path.join(process.cwd(), 'app/admin/about/page.tsx');
 let content = fs.readFileSync(filePath, 'utf8');
 
-// Replace Grid item with sx prop
-content = content.replace(/<Grid item xs={12}([^>]*?)>/g, '<Grid sx={{ gridColumn: \'span 12\' }}$1>');
-content = content.replace(/<Grid item xs={12} md={6}([^>]*?)>/g, '<Grid sx={{ gridColumn: { xs: \'span 12\', md: \'span 6\' } }}$1>');
-content = content.replace(/<Grid item xs={12} md={4}([^>]*?)>/g, '<Grid sx={{ gridColumn: { xs: \'span 12\', md: \'span 4\' } }}$1>');
-content = content.replace(/<Grid item xs={6}([^>]*?)>/g, '<Grid sx={{ gridColumn: \'span 6\' }}$1>');
-content = content.replace(/<Grid item xs={6} md={4}([^>]*?)>/g, '<Grid sx={{ gridColumn: { xs: \'span 6\', md: \'span 4\' } }}$1>');
+// Function to escape regex special characters
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Replace specific problematic Grid components first
+const specificReplacements = [
+  {
+    from: '<Grid item xs={12} component="div">\n                <AdminFormField',
+    to: '<Grid sx={{ gridColumn: \'span 12\' }} component="div">\n                <AdminFormField'
+  },
+  {
+    from: '<Grid item xs={12} component="div">\n                  <Typography',
+    to: '<Grid sx={{ gridColumn: \'span 12\' }} component="div">\n                  <Typography'
+  }
+];
+
+// Apply specific replacements
+specificReplacements.forEach(({ from, to }) => {
+  content = content.replace(new RegExp(escapeRegExp(from), 'g'), to);
+});
+
+// General replacements for Grid components
+const replacements = [
+  { from: /<Grid item xs={12}([^>]*?)>/g, to: '<Grid sx={{ gridColumn: \'span 12\' }}$1>' },
+  { from: /<Grid item xs={12} md={6}([^>]*?)>/g, to: '<Grid sx={{ gridColumn: { xs: \'span 12\', md: \'span 6\' } }}$1>' },
+  { from: /<Grid item xs={12} md={4}([^>]*?)>/g, to: '<Grid sx={{ gridColumn: { xs: \'span 12\', md: \'span 4\' } }}$1>' },
+  { from: /<Grid item xs={6}([^>]*?)>/g, to: '<Grid sx={{ gridColumn: \'span 6\' }}$1>' },
+  { from: /<Grid item xs={6} md={4}([^>]*?)>/g, to: '<Grid sx={{ gridColumn: { xs: \'span 6\', md: \'span 4\' } }}$1>' },
+  // Handle any other Grid with item prop
+  { from: /<Grid item ([^>]*?)>/g, to: '<Grid sx={{ gridColumn: \'span 12\' }} $1>' }
+];
+
+// Apply general replacements
+replacements.forEach(({ from, to }) => {
+  content = content.replace(from, to);
+});
 
 fs.writeFileSync(filePath, content, 'utf8');
 console.log('Grid components fixed in app/admin/about/page.tsx'); 

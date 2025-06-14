@@ -699,7 +699,7 @@ const AboutAdmin = () => {
                           placeholder="e.g., Apr 2025 - Present"
                         />
                       </Grid>
-                      <Grid item xs={12} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} component="div">
                 <AdminFormField
                           label="Description"
                           id={`description-${index}`}
@@ -712,7 +712,7 @@ const AboutAdmin = () => {
                 />
                       </Grid>
                 
-                      <Grid item xs={12} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} component="div">
                   <Typography variant="subtitle1" gutterBottom>
                           Images (Maximum 2)
                   </Typography>
@@ -720,7 +720,7 @@ const AboutAdmin = () => {
                         <Box sx={{ mb: 2 }}>
                           <Grid container spacing={2} component="div">
                             {exp.images?.map((imageUrl, imageIndex) => (
-                              <Grid item xs={6} md={4} key={imageIndex} component="div">
+                              <Grid sx={{ gridColumn: 'span 12' }} xs={6} md={4} key={imageIndex} component="div">
                                 <Box sx={{
                                   position: 'relative',
                                   width: '100%',
@@ -759,7 +759,7 @@ const AboutAdmin = () => {
                             ))}
                             
                             {(!exp.images || exp.images.length < 2) && (
-                              <Grid item xs={6} md={4} component="div">
+                              <Grid sx={{ gridColumn: 'span 12' }} xs={6} md={4} component="div">
                                 <Button
                                   component="label"
                                   variant="outlined"
@@ -822,7 +822,7 @@ const AboutAdmin = () => {
                     </Box>
 
                     <Grid container spacing={3} component="div">
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} md={6} component="div">
                         <AdminFormField
                           label="Institution"
                           id={`institution-${index}`}
@@ -831,7 +831,7 @@ const AboutAdmin = () => {
                           placeholder="School/University name"
                         />
                       </Grid>
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} md={6} component="div">
                         <AdminFormField
                           label="Course (Optional)"
                           id={`course-${index}`}
@@ -840,7 +840,7 @@ const AboutAdmin = () => {
                           placeholder="Course name (optional)"
                         />
                       </Grid>
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} md={6} component="div">
                         <AdminFormField
                           label="Department"
                           id={`department-${index}`}
@@ -849,7 +849,7 @@ const AboutAdmin = () => {
                           placeholder="Department or School Level"
                         />
                       </Grid>
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} md={6} component="div">
                         <AdminFormField
                           label="Duration"
                           id={`duration-${index}`}
@@ -858,7 +858,7 @@ const AboutAdmin = () => {
                           placeholder="e.g., 2022-2026"
                         />
                       </Grid>
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} md={6} component="div">
                         <AdminFormField
                           label="CGPA"
                           id={`cgpa-${index}`}
@@ -867,7 +867,7 @@ const AboutAdmin = () => {
                           placeholder="e.g., 9.21"
                         />
                       </Grid>
-                      <Grid item xs={12} md={6} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} md={6} component="div">
                         <AdminFormField
                           label="Percentage"
                           id={`percentage-${index}`}
@@ -922,7 +922,7 @@ const AboutAdmin = () => {
                     </Box>
 
                     <Grid container spacing={3} component="div">
-                      <Grid item xs={12} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} component="div">
                         <AdminFormField
                           label="Skill Name"
                           id={`skill-name-${index}`}
@@ -943,7 +943,7 @@ const AboutAdmin = () => {
                           placeholder="e.g., React.js"
                         />
                       </Grid>
-                      <Grid item xs={12} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} component="div">
                         <AdminFormField
                           label="Description"
                           id={`skill-description-${index}`}
@@ -967,7 +967,7 @@ const AboutAdmin = () => {
                         />
                       </Grid>
 
-                      <Grid item xs={12} component="div">
+                      <Grid sx={{ gridColumn: 'span 12' }} xs={12} component="div">
                         <Typography variant="subtitle2" gutterBottom>
                           Skill Image
                 </Typography>
