@@ -158,12 +158,11 @@ const AboutAdmin = () => {
     setTabValue(newValue);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { id, value } = e.target;
-    setAboutData(prev => ({ ...prev, [id]: value }));
+  const handleInputChange = (field: string, value: string) => {
+    setAboutData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLanguagesInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLanguagesInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target.value;
     setLanguagesInput(value);
     
@@ -576,7 +575,7 @@ const AboutAdmin = () => {
                           placeholder="https://github.com/yourusername"
                         />
                       </Grid>
-                      <Grid item xs={12} md={4} component="div">
+                      <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }} component="div">
                         <AdminFormField
                           label="LinkedIn"
                           id="linkedin"
@@ -585,7 +584,7 @@ const AboutAdmin = () => {
                           placeholder="https://linkedin.com/in/yourusername"
                         />
                       </Grid>
-                      <Grid item xs={12} md={4} component="div">
+                      <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }} component="div">
                         <AdminFormField
                           label="Email"
                           id="email"
@@ -597,7 +596,7 @@ const AboutAdmin = () => {
                     </Grid>
                   </Grid>
 
-                  <Grid item xs={12} component="div">
+                  <Grid sx={{ gridColumn: 'span 12' }} component="div">
                     <Typography variant="subtitle1" gutterBottom>
                       Profile Image
                     </Typography>
