@@ -1,0 +1,103 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    function isValidFileSize() {
+      return request.resource.size <= 5 * 1024 * 1024;
+    }
+    
+    function isImageType() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isPdfType() {
+      return request.resource.contentType == 'application/pdf';
+    }
+    
+    function isDocumentType() {
+      return request.resource.contentType.matches('application/.*') || 
+             request.resource.contentType.matches('text/.*');
+    }
+    
+    function isCommonFileSize() {
+      return request.resource.size <= 10 * 1024 * 1024;
+    }
+    
+    // Hero section images - using exact path pattern from the app code
+    match /hero/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && isValidFileSize() && isImageType();
+    }
+    
+    // Hero gallery images
+    match /hero-gallery/{imageId} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && isValidFileSize() && isImageType();
+      allow delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Project images
+    match /projects/{projectId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && isValidFileSize() && isImageType();
+    }
+    
+    // Blog images - modified rule for blog uploads
+    match /blog/{postId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      allow delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // About section images - simplified rule
+    match /about/{fileName=**} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && isValidFileSize() && isImageType();
+    }
+    
+    // Resource files
+    match /resources/{categoryId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && isCommonFileSize() && 
+        (isImageType() || isPdfType() || isDocumentType());
+    }
+    
+    // User profile images
+    match /users/{userId}/profile/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || request.auth.token.email == 'hypertextrj@gmail.com') && 
+        isValidFileSize() && 
+        isImageType();
+    }
+    
+    // User documents
+    match /users/{userId}/documents/{fileName} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || request.auth.token.email == 'hypertextrj@gmail.com');
+      allow write: if isAuthenticated() && 
+        (request.auth.uid == userId || request.auth.token.email == 'hypertextrj@gmail.com') && 
+        isCommonFileSize();
+    }
+    
+    // Temporary uploads
+    match /temp/{userId}/{fileName} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId && isCommonFileSize();
+    }
+    
+    // Default deny
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 

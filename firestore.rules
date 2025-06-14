@@ -1,0 +1,157 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return isAuthenticated() && 
+        request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+
+    // Helper function to validate timestamps
+    function isValidTimestamp(timeField) {
+      return timeField is timestamp && timeField <= request.time;
+    }
+    
+    // Helper function to validate string fields
+    function isValidString(field) {
+      return field is string && field.size() > 0 && field.size() <= 1000;
+    }
+    
+    // Content collection - only admins can write, anyone can read
+    match /content/{document=**} {
+      allow read: if true; // Public read access
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Hero section - only admins can write, anyone can read
+    match /content/hero {
+      allow read: if true;
+      
+      // Special rule for updating only images
+      allow update: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && 
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['images', 'updatedAt', 'heading', 'description']) || 
+        (request.resource.data.images is list && 
+         request.resource.data.updatedAt is timestamp &&
+         isValidString(request.resource.data.heading) &&
+         isValidString(request.resource.data.description)));
+      
+      // Full create/update rule for complete hero section management
+      allow create: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' &&
+        isValidString(request.resource.data.heading) &&
+        isValidString(request.resource.data.description) &&
+        (request.resource.data.images is list || request.resource.data.images == null);
+      
+      allow delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Projects collection - only admins can write, anyone can read
+    match /projects/{projectId} {
+      allow read: if true; // Public read access
+      allow create, update: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' &&
+        isValidString(request.resource.data.title) &&
+        isValidString(request.resource.data.description) &&
+        (request.resource.data.images is list || request.resource.data.images == null) &&
+        request.resource.data.createdAt is timestamp;
+      allow delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Blog collection - only admins can write, published posts can be read by anyone
+    match /blog/{postId} {
+      allow read: if resource.data.status == 'published' || (isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com');
+      allow create, update, delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Subscribers collection - anyone can create, only admin can read/delete
+    match /subscribers/{subscriberId} {
+      allow read: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      // Allow public to create new subscriber entries
+      allow create: if 
+        isValidString(request.resource.data.email) &&
+        request.resource.data.email.matches('^[^@]+@[^@]+\\.[^@\\.]+$') && // Email format validation
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.active == true;
+      allow update, delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Resource categories - only admins can write, anyone can read
+    match /resourceCategories/{categoryId} {
+      allow read: if true; // Public read access
+      allow create, update: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' &&
+        isValidString(request.resource.data.title) &&
+        (request.resource.data.order is number || request.resource.data.order == null);
+      allow delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      
+      // Resource items - nested under categories
+      match /items/{itemId} {
+        allow read: if true;
+        allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      }
+    }
+    
+    // Settings collection - only admins can write, public can read
+    match /settings/{document=**} {
+      allow read: if true; // Public read access for settings
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // About page content - only admins can write, anyone can read
+    match /content/about {
+      allow read: if true; // Public read access
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com'; // Only admins can write
+    }
+    
+    // Footer settings - only admins can write, anyone can read
+    match /footer/{document} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // User profiles - users can read/write their own data, admins can read/write all
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || request.auth.token.email == 'hypertextrj@gmail.com');
+      allow write: if isAuthenticated() && (request.auth.uid == userId || request.auth.token.email == 'hypertextrj@gmail.com');
+    }
+    
+    // Admin users collection - only admins can read/write their own data
+    match /adminUsers/{userId} {
+      allow read: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com' && request.auth.uid == userId;
+    }
+    
+    // Admin activity logs - only admins can write, only admins can read
+    match /adminActivity/{logId} {
+      allow read: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      allow create: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      allow update, delete: if false; // Audit logs should be immutable
+    }
+    
+    // Featured projects - only admins can write, anyone can read
+    match /featuredProjects/{document} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Contact form submissions - anyone can create, only admins can read
+    match /contactSubmissions/{submissionId} {
+      allow read: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+      allow create: if 
+        isValidString(request.resource.data.name) &&
+        isValidString(request.resource.data.email) &&
+        isValidString(request.resource.data.message) &&
+        request.resource.data.timestamp is timestamp &&
+        request.resource.data.timestamp <= request.time;
+      allow update, delete: if isAuthenticated() && request.auth.token.email == 'hypertextrj@gmail.com';
+    }
+    
+    // Default deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 
