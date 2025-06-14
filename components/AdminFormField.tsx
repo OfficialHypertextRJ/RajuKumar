@@ -12,6 +12,7 @@ interface AdminFormFieldProps {
   accept?: string;
   helperText?: string;
   multiline?: boolean;
+  fullWidth?: boolean;
 }
 
 export default function AdminFormField({
@@ -25,12 +26,13 @@ export default function AdminFormField({
   rows = 4,
   accept,
   helperText,
-  multiline = false
+  multiline = false,
+  fullWidth = true
 }: AdminFormFieldProps) {
   const useTextarea = type === 'textarea' || multiline;
   
   return (
-    <div className="mb-6">
+    <div className={`mb-6 ${fullWidth ? 'w-full' : ''}`}>
       <label htmlFor={id} className="block text-sm font-medium text-gray-300 mb-2">
         {label} {required && <span className="text-red-500">*</span>}
       </label>

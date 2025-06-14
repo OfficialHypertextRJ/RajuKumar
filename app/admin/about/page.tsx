@@ -505,7 +505,7 @@ const AboutAdmin = () => {
                 </Typography>
                 
                 <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                  <Grid sx={{ gridColumn: 'span 12' }}>
                     <AdminFormField
                       label="Name"
                       id="name"
@@ -515,7 +515,7 @@ const AboutAdmin = () => {
                     />
                   </Grid>
                   
-                  <Grid item xs={12}>
+                  <Grid sx={{ gridColumn: 'span 12' }}>
                     <AdminFormField
                       label="Designation"
                       id="designation"
@@ -526,7 +526,7 @@ const AboutAdmin = () => {
                     />
                   </Grid>
                   
-                  <Grid item xs={12}>
+                  <Grid sx={{ gridColumn: 'span 12' }}>
                     <AdminFormField
                       label="Introduction"
                       id="introduction"
@@ -539,7 +539,7 @@ const AboutAdmin = () => {
                     />
                   </Grid>
                   
-                  <Grid item xs={12}>
+                  <Grid sx={{ gridColumn: 'span 12' }}>
                     <AdminFormField
                       label="Location"
                       id="location"
@@ -550,7 +550,7 @@ const AboutAdmin = () => {
                     />
                   </Grid>
                   
-                  <Grid item xs={12}>
+                  <Grid sx={{ gridColumn: 'span 12' }}>
                     <AdminFormField
                       label="Languages (comma separated)"
                       id="languages"
@@ -561,13 +561,13 @@ const AboutAdmin = () => {
                     />
                   </Grid>
                   
-                  <Grid item xs={12} component="div">
+                  <Grid sx={{ gridColumn: 'span 12' }} component="div">
                     <Typography variant="subtitle1" gutterBottom>
                       Social Links
                     </Typography>
                     
                     <Grid container spacing={2} component="div">
-                      <Grid item xs={12} md={4} component="div">
+                      <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }} component="div">
                         <AdminFormField
                           label="GitHub"
                           id="github"

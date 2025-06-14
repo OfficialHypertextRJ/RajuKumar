@@ -1,0 +1,617 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Typography, 
+  Paper, 
+  Grid, 
+  Tabs, 
+  Tab, 
+  Button, 
+  IconButton, 
+  TextField,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Chip,
+  CircularProgress
+} from '@mui/material';
+import AdminContentLayout from '@/components/AdminContentLayout';
+import AdminFormField from '@/components/AdminFormField';
+import AdminSubmitButton from '@/components/AdminSubmitButton';
+import { db, storage } from '@/lib/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { toast } from 'react-hot-toast';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ImageIcon from '@mui/icons-material/Image';
+
+// Define the interface for the About data
+interface AboutData {
+  // Introduction section
+  name: string;
+  designation: string;
+  profileImage: string;
+  location: string;
+  languages: string[];
+  introduction: string;
+  links: {
+    github: string;
+    linkedin: string;
+    email: string;
+  };
+  
+  // Work Experience section
+  experience: {
+    company: string;
+    position: string;
+    duration: string;
+    description: string[];
+    images: string[];
+  }[];
+  
+  // Studies section
+  education: {
+    institution: string;
+    course?: string;
+    department: string;
+    percentage?: string;
+    cgpa?: string;
+    duration: string;
+  }[];
+  
+  // Technical Skills section
+  skills: {
+    name: string;
+    description: string;
+    imageUrl?: string;
+  }[];
+}
+
+const AboutAdmin = () => {
+  const [tabValue, setTabValue] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [languagesInput, setLanguagesInput] = useState('');
+  
+  // Initial empty state for the about data
+  const [aboutData, setAboutData] = useState<AboutData>({
+    name: '',
+    designation: '',
+    profileImage: '',
+    location: '',
+    languages: [],
+    introduction: '',
+    links: {
+      github: '',
+      linkedin: '',
+      email: ''
+    },
+    experience: [],
+    education: [],
+    skills: []
+  });
+  
+  // Fetch about data on component mount
+  useEffect(() => {
+    fetchAboutData();
+  }, []);
+  
+  // Function to fetch about data from Firestore
+  const fetchAboutData = async () => {
+    try {
+      const aboutDocRef = doc(db, 'content', 'about');
+      const aboutDocSnap = await getDoc(aboutDocRef);
+      
+      if (aboutDocSnap.exists()) {
+        const data = aboutDocSnap.data() as AboutData;
+        setAboutData(data);
+        
+        // Set languages input
+        if (data.languages && data.languages.length > 0) {
+          setLanguagesInput(data.languages.join(', '));
+        }
+      }
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching about data:', error);
+      toast.error('Failed to load about data');
+      setLoading(false);
+    }
+  };
+  
+  // Handle tab change
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+  
+  // Handle input changes for text fields
+  const handleInputChange = (field: string, value: string) => {
+    setAboutData(prev => ({ ...prev, [field]: value }));
+  };
+  
+  // Handle languages input change
+  const handleLanguagesInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLanguagesInput(e.target.value);
+    
+    // Split by comma and trim spaces
+    const languagesArray = e.target.value.split(',').map(lang => lang.trim()).filter(lang => lang);
+    
+    setAboutData(prev => ({ ...prev, languages: languagesArray }));
+  };
+  
+  // Handle skills changes
+  const handleSkillsChange = (index: number, field: string, value: string) => {
+    setAboutData(prev => {
+      const updatedSkills = [...prev.skills];
+      updatedSkills[index] = { ...updatedSkills[index], [field]: value };
+      return { ...prev, skills: updatedSkills };
+    });
+  };
+  
+  // Handle education changes
+  const handleEducationChange = (index: number, field: string, value: string) => {
+    setAboutData(prev => {
+      const updatedEducation = [...prev.education];
+      updatedEducation[index] = { ...updatedEducation[index], [field]: value };
+      return { ...prev, education: updatedEducation };
+    });
+  };
+  
+  // Handle experience changes
+  const handleExperienceChange = (index: number, field: string, value: string | string[]) => {
+    setAboutData(prev => {
+      const updatedExperience = [...prev.experience];
+      updatedExperience[index] = { ...updatedExperience[index], [field]: value };
+      return { ...prev, experience: updatedExperience };
+    });
+  };
+  
+  // Handle profile image change
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      uploadProfileImage(e.target.files[0]);
+    }
+  };
+  
+  // Upload profile image to Firebase Storage
+  const uploadProfileImage = async (file: File) => {
+    try {
+      setImageUploading(true);
+      
+      // Create a reference to the storage location
+      const storageRef = ref(storage, `about/profile-${Date.now()}`);
+      
+      // Upload the file
+      await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update the about data with the new image URL
+      setAboutData(prev => ({ ...prev, profileImage: downloadURL }));
+      
+      toast.success('Profile image uploaded successfully');
+      setImageUploading(false);
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast.error('Failed to upload profile image');
+      setImageUploading(false);
+    }
+  };
+  
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    
+    try {
+      // Save the about data to Firestore
+      const aboutDocRef = doc(db, 'content', 'about');
+      await setDoc(aboutDocRef, aboutData);
+      
+      toast.success('About information saved successfully');
+      setSaving(false);
+    } catch (error) {
+      console.error('Error saving about data:', error);
+      toast.error('Failed to save about information');
+      setSaving(false);
+    }
+  };
+  
+  // Add a new education entry
+  const addEducation = () => {
+    setAboutData(prev => ({
+      ...prev,
+      education: [
+        ...prev.education,
+        {
+          institution: '',
+          department: '',
+          course: '',
+          percentage: '',
+          cgpa: '',
+          duration: ''
+        }
+      ]
+    }));
+  };
+  
+  // Add a new experience entry
+  const addExperience = () => {
+    setAboutData(prev => ({
+      ...prev,
+      experience: [
+        ...prev.experience,
+        {
+          company: '',
+          position: '',
+          duration: '',
+          description: [''],
+          images: []
+        }
+      ]
+    }));
+  };
+  
+  // Remove an education entry
+  const removeEducation = (index: number) => {
+    setAboutData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Remove an experience entry
+  const removeExperience = (index: number) => {
+    setAboutData(prev => ({
+      ...prev,
+      experience: prev.experience.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle link changes
+  const handleLinkChange = (field: string, value: string) => {
+    setAboutData(prev => ({
+      ...prev,
+      links: {
+        ...prev.links,
+        [field]: value
+      }
+    }));
+  };
+  
+  // Handle experience image upload
+  const handleExperienceImageUpload = async (file: File, expIndex: number, imageIndex: number) => {
+    try {
+      setImageUploading(true);
+      
+      // Create a reference to the storage location
+      const storageRef = ref(storage, `about/experience-${expIndex}-${Date.now()}`);
+      
+      // Upload the file
+      await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update the about data with the new image URL
+      setAboutData(prev => {
+        const updatedExperience = [...prev.experience];
+        const currentExp = { ...updatedExperience[expIndex] };
+        
+        // If it's a new image, add it to the array
+        if (imageIndex >= currentExp.images.length) {
+          currentExp.images = [...currentExp.images, downloadURL];
+        } else {
+          // Otherwise replace the existing image
+          currentExp.images = currentExp.images.map((img, i) => 
+            i === imageIndex ? downloadURL : img
+          );
+        }
+        
+        updatedExperience[expIndex] = currentExp;
+        return { ...prev, experience: updatedExperience };
+      });
+      
+      toast.success('Experience image uploaded successfully');
+      setImageUploading(false);
+    } catch (error) {
+      console.error('Error uploading experience image:', error);
+      toast.error('Failed to upload experience image');
+      setImageUploading(false);
+    }
+  };
+  
+  // Remove experience image
+  const removeExperienceImage = (expIndex: number, imageIndex: number) => {
+    setAboutData(prev => {
+      const updatedExperience = [...prev.experience];
+      const currentExp = { ...updatedExperience[expIndex] };
+      
+      // Remove the image URL from the array
+      currentExp.images = currentExp.images.filter((_, i) => i !== imageIndex);
+      
+      updatedExperience[expIndex] = currentExp;
+      return { ...prev, experience: updatedExperience };
+    });
+  };
+  
+  // Handle skill image upload
+  const handleSkillImageUpload = async (file: File, skillIndex: number) => {
+    try {
+      setImageUploading(true);
+      
+      // Create a reference to the storage location
+      const storageRef = ref(storage, `about/skill-${skillIndex}-${Date.now()}`);
+      
+      // Upload the file
+      await uploadBytes(storageRef, file);
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      // Update the about data with the new image URL
+      setAboutData(prev => {
+        const updatedSkills = [...prev.skills];
+        updatedSkills[skillIndex] = { 
+          ...updatedSkills[skillIndex], 
+          imageUrl: downloadURL 
+        };
+        return { ...prev, skills: updatedSkills };
+      });
+      
+      toast.success('Skill image uploaded successfully');
+      setImageUploading(false);
+    } catch (error) {
+      console.error('Error uploading skill image:', error);
+      toast.error('Failed to upload skill image');
+      setImageUploading(false);
+    }
+  };
+  
+  // Add a new skill
+  const addSkill = () => {
+    setAboutData(prev => ({
+      ...prev,
+      skills: [
+        ...prev.skills,
+        {
+          name: '',
+          description: ''
+        }
+      ]
+    }));
+  };
+  
+  // Remove a skill
+  const removeSkill = (index: number) => {
+    setAboutData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle experience description changes
+  const handleExperienceDescriptionChange = (expIndex: number, descIndex: number, value: string) => {
+    setAboutData(prev => {
+      const updatedExperience = [...prev.experience];
+      const currentExp = { ...updatedExperience[expIndex] };
+      const updatedDescriptions = [...currentExp.description];
+      
+      updatedDescriptions[descIndex] = value;
+      
+      currentExp.description = updatedDescriptions;
+      updatedExperience[expIndex] = currentExp;
+      
+      return { ...prev, experience: updatedExperience };
+    });
+  };
+  
+  // Add a new description point to an experience
+  const addExperienceDescription = (expIndex: number) => {
+    setAboutData(prev => {
+      const updatedExperience = [...prev.experience];
+      const currentExp = { ...updatedExperience[expIndex] };
+      
+      currentExp.description = [...currentExp.description, ''];
+      updatedExperience[expIndex] = currentExp;
+      
+      return { ...prev, experience: updatedExperience };
+    });
+  };
+  
+  // Remove a description point from an experience
+  const removeExperienceDescription = (expIndex: number, descIndex: number) => {
+    setAboutData(prev => {
+      const updatedExperience = [...prev.experience];
+      const currentExp = { ...updatedExperience[expIndex] };
+      
+      currentExp.description = currentExp.description.filter((_, i) => i !== descIndex);
+      updatedExperience[expIndex] = currentExp;
+      
+      return { ...prev, experience: updatedExperience };
+    });
+  };
+  
+  if (loading) {
+    return (
+      <AdminContentLayout title="About Page">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </AdminContentLayout>
+    );
+  }
+  
+  return (
+    <AdminContentLayout title="About Page">
+      <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+        <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
+          <Tab label="Introduction" />
+          <Tab label="Work Experience" />
+          <Tab label="Education" />
+          <Tab label="Skills" />
+        </Tabs>
+        
+        <Box sx={{ mb: 3 }}>
+          {/* Introduction Tab */}
+          {tabValue === 0 && (
+            <Paper sx={{ p: 3 }} component="div">
+              <Typography variant="h6" gutterBottom>
+                Introduction
+              </Typography>
+              
+              <Grid container spacing={3}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
+                  <AdminFormField
+                    label="Name"
+                    id="name"
+                    value={aboutData.name || ''}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                  />
+                </Grid>
+                
+                <Grid sx={{ gridColumn: 'span 12' }}>
+                  <AdminFormField
+                    label="Designation"
+                    id="designation"
+                    value={aboutData.designation || ''}
+                    onChange={(e) => handleInputChange('designation', e.target.value)}
+                    placeholder="e.g., Software Engineer"
+                  />
+                </Grid>
+                
+                <Grid sx={{ gridColumn: 'span 12' }}>
+                  <AdminFormField
+                    label="Introduction"
+                    id="introduction"
+                    value={aboutData.introduction || ''}
+                    onChange={(e) => handleInputChange('introduction', e.target.value)}
+                    type="textarea"
+                    rows={3}
+                    placeholder="Brief introduction about yourself"
+                  />
+                </Grid>
+                
+                <Grid sx={{ gridColumn: 'span 12' }}>
+                  <AdminFormField
+                    label="Location"
+                    id="location"
+                    value={aboutData.location || ''}
+                    onChange={(e) => handleInputChange('location', e.target.value)}
+                    placeholder="City, Country"
+                  />
+                </Grid>
+                
+                <Grid sx={{ gridColumn: 'span 12' }}>
+                  <AdminFormField
+                    label="Languages (comma separated)"
+                    id="languages"
+                    value={languagesInput}
+                    onChange={handleLanguagesInputChange}
+                    placeholder="English, Hindi, etc."
+                    helperText="Enter languages you speak, separated by commas"
+                  />
+                </Grid>
+                
+                <Grid sx={{ gridColumn: 'span 12' }} component="div">
+                  <Typography variant="subtitle1" gutterBottom>
+                    Social Links
+                  </Typography>
+                  
+                  <Grid container spacing={2} component="div">
+                    <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }} component="div">
+                      <AdminFormField
+                        label="GitHub"
+                        id="github"
+                        value={aboutData.links?.github || ''}
+                        onChange={(e) => handleLinkChange('github', e.target.value)}
+                        placeholder="https://github.com/yourusername"
+                      />
+                    </Grid>
+                    <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }} component="div">
+                      <AdminFormField
+                        label="LinkedIn"
+                        id="linkedin"
+                        value={aboutData.links?.linkedin || ''}
+                        onChange={(e) => handleLinkChange('linkedin', e.target.value)}
+                        placeholder="https://linkedin.com/in/yourusername"
+                      />
+                    </Grid>
+                    <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 4' } }} component="div">
+                      <AdminFormField
+                        label="Email"
+                        id="email"
+                        value={aboutData.links?.email || ''}
+                        onChange={(e) => handleLinkChange('email', e.target.value)}
+                        placeholder="your.email@example.com"
+                      />
+                    </Grid>
+                  </Grid>
+                </Grid>
+
+                <Grid sx={{ gridColumn: 'span 12' }} component="div">
+                  <Typography variant="subtitle1" gutterBottom>
+                    Profile Image
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    {aboutData.profileImage && (
+                      <Box
+                        sx={{
+                          width: 100,
+                          height: 100,
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          mr: 2,
+                          border: '1px solid',
+                          borderColor: 'divider'
+                        }}
+                      >
+                        <img
+                          src={aboutData.profileImage}
+                          alt="Profile"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
+                      </Box>
+                    )}
+                    
+                      <Button
+                        component="label"
+                        variant="outlined"
+                        startIcon={<ImageIcon />}
+                      disabled={imageUploading}
+                      >
+                      {aboutData.profileImage ? 'Change Image' : 'Upload Image'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          hidden
+                          onChange={handleProfileImageChange}
+                        />
+                      </Button>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
+          )}
+          
+          {/* Rest of the tabs remain the same, but update all Grid item components */}
+          {/* ... */}
+        </Box>
+        
+        <AdminSubmitButton loading={saving} />
+      </Box>
+    </AdminContentLayout>
+  );
+};
+
+export default AboutAdmin; 
