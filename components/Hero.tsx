@@ -38,7 +38,6 @@ const Hero = () => {
 
   const handleAnimationComplete = () => {
     setTextAnimationComplete(true);
-    console.log('Animation completed!');
   };
 
   useEffect(() => {

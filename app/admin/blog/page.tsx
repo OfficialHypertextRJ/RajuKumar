@@ -235,7 +235,6 @@ const BlogAdmin = () => {
     
     try {
       console.log('Starting cover image upload for post:', postId);
-      console.log('Storage bucket:', storage.bucket);
       
       // Force token refresh before upload
       await auth.currentUser?.getIdToken(true);
@@ -471,18 +470,19 @@ const BlogAdmin = () => {
           prev.map(p => p.id === postId ? { 
             ...p, 
             ...postData, 
-            coverImage: coverImageFile ? p.coverImage : coverImagePreview 
+            coverImage: coverImageFile ? p.coverImage : coverImagePreview,
+            status: status as 'published' | 'draft' | 'scheduled'
           } : p)
         );
       } else if (postId) {
         // Add new post to local state
-        const newPost = {
+        const newPost: BlogPost = {
           id: postId,
           ...postData,
           coverImage: '',
           createdAt: new Date(),
           status: status as 'published' | 'draft' | 'scheduled'
-        } as BlogPost;
+        };
         setBlogPosts(prev => [newPost, ...prev]);
       }
       
@@ -518,7 +518,7 @@ const BlogAdmin = () => {
       await auth.currentUser?.getIdToken(true);
       
       // Always set to published for testing
-      const newStatus = 'published';
+      const newStatus = 'published' as const;
       
       await updateDoc(doc(db, 'blog', post.id), {
         status: newStatus,
@@ -705,7 +705,7 @@ const BlogAdmin = () => {
                 blogPosts
                   .filter(post => post.status === 'scheduled')
                   .map((post) => (
-                    <Grid item xs={12} sm={6} md={4} key={post.id}>
+                    <Grid sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }} key={post.id}>
                       <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <CardMedia
                           component="img"
@@ -749,7 +749,7 @@ const BlogAdmin = () => {
                     </Grid>
                   ))
               ) : (
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <Paper sx={{ p: 3, textAlign: 'center' }}>
                     <Typography variant="body1" color="text.secondary">
                       No scheduled posts. You can schedule posts by selecting the "Scheduled" status and setting a future publish date.
@@ -786,7 +786,7 @@ const BlogAdmin = () => {
           <DialogContent>
             <Box component="form" noValidate sx={{ mt: 2 }}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }} >
                   <AdminFormField
                     label="Post Title"
                     id="title"
@@ -796,7 +796,7 @@ const BlogAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ gridColumn: 'span 12' }}  >
                   <AdminFormField
                     label="Category"
                     id="category"
@@ -806,7 +806,7 @@ const BlogAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ gridColumn: 'span 12' }}  >
                   <FormControl fullWidth variant="outlined">
                     <InputLabel id="status-label">Status</InputLabel>
                     <Select
@@ -824,7 +824,7 @@ const BlogAdmin = () => {
                 </Grid>
                 
                 {(formData.status === 'scheduled' || formData.status === 'published') && (
-                  <Grid item xs={12} sm={6}>
+                  <Grid sx={{ gridColumn: 'span 12' }}  >
                     <TextField
                       fullWidth
                       label="Publish Date"
@@ -839,7 +839,7 @@ const BlogAdmin = () => {
                   </Grid>
                 )}
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }} >
                   <Typography variant="subtitle1" gutterBottom>
                     Content
                   </Typography>
@@ -898,7 +898,7 @@ const BlogAdmin = () => {
                   )}
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }} >
                   <AdminFormField
                     label="Excerpt (optional)"
                     id="excerpt"
@@ -910,7 +910,7 @@ const BlogAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }} >
                   <Typography variant="subtitle1" gutterBottom>
                     Cover Image
                   </Typography>

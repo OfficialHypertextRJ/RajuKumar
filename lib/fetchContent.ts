@@ -78,8 +78,6 @@ export async function fetchFeaturedProjects() {
 export async function fetchLatestBlogPosts() {
   return getCachedData('latest-blog-posts', async () => {
     try {
-      console.log('Fetching latest blog posts...');
-      
       const blogRef = collection(db, 'blog');
       const q = query(
         blogRef, 
@@ -88,7 +86,6 @@ export async function fetchLatestBlogPosts() {
       );
       
       const querySnapshot = await getDocs(q);
-      console.log(`Found ${querySnapshot.size} total blog posts`);
       
       // Define post type
       interface BlogPost {

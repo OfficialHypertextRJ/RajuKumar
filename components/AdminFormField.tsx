@@ -13,6 +13,10 @@ interface AdminFormFieldProps {
   helperText?: string;
   multiline?: boolean;
   fullWidth?: boolean;
+  InputProps?: {
+    startAdornment?: React.ReactNode;
+    endAdornment?: React.ReactNode;
+  };
 }
 
 export default function AdminFormField({
@@ -27,7 +31,8 @@ export default function AdminFormField({
   accept,
   helperText,
   multiline = false,
-  fullWidth = true
+  fullWidth = true,
+  InputProps
 }: AdminFormFieldProps) {
   const useTextarea = type === 'textarea' || multiline;
   
@@ -57,15 +62,27 @@ export default function AdminFormField({
           className="block w-full text-sm text-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[#3bcf9a] file:text-black hover:file:bg-[#2eaf82] file:cursor-pointer cursor-pointer"
         />
       ) : (
-        <input
-          id={id}
-          type={type}
-          value={value}
-          onChange={onChange}
-          required={required}
-          placeholder={placeholder}
-          className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3bcf9a] focus:border-transparent text-white"
-        />
+        <div className="relative">
+          {InputProps?.startAdornment && (
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+              {InputProps.startAdornment}
+            </div>
+          )}
+          <input
+            id={id}
+            type={type}
+            value={value}
+            onChange={onChange}
+            required={required}
+            placeholder={placeholder}
+            className={`w-full px-4 py-3 bg-[#1a1a1a] border border-[#333] rounded-md focus:outline-none focus:ring-2 focus:ring-[#3bcf9a] focus:border-transparent text-white ${InputProps?.startAdornment ? 'pl-10' : ''} ${InputProps?.endAdornment ? 'pr-10' : ''}`}
+          />
+          {InputProps?.endAdornment && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              {InputProps.endAdornment}
+            </div>
+          )}
+        </div>
       )}
       
       {helperText && (

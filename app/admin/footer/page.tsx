@@ -253,7 +253,7 @@ const FooterAdmin = () => {
             </Typography>
             
             <Grid container spacing={3}>
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
                 <AdminFormField
                   label="Copyright Text"
                   id="copyright"
@@ -263,7 +263,7 @@ const FooterAdmin = () => {
                 />
               </Grid>
               
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
                 <AdminFormField
                   label="Contact Email"
                   id="email"
@@ -273,7 +273,7 @@ const FooterAdmin = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
                 <AdminFormField
                   label="Phone Number"
                   id="phone"
@@ -283,7 +283,7 @@ const FooterAdmin = () => {
                 />
               </Grid>
               
-              <Grid item xs={12} md={6}>
+              <Grid sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
                 <AdminFormField
                   label="Location"
                   id="location"
@@ -369,7 +369,7 @@ const FooterAdmin = () => {
           <DialogContent>
             <Box sx={{ mt: 2 }}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Platform Name"
                     id="platform"
@@ -380,7 +380,7 @@ const FooterAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="URL"
                     id="url"
@@ -388,13 +388,10 @@ const FooterAdmin = () => {
                     onChange={handleLinkInputChange}
                     required
                     placeholder="https://github.com/yourusername"
-                    InputProps={{
-                      startAdornment: <LinkIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    }}
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Icon (Optional)"
                     id="icon"

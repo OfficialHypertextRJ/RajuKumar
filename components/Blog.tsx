@@ -24,9 +24,7 @@ const Blog = () => {
       setLoading(true);
       
       try {
-        console.log('Loading blog posts for homepage...');
         const fetchedPosts = await fetchLatestBlogPosts();
-        console.log(`Fetched ${fetchedPosts.length} posts for homepage`);
         
         if (fetchedPosts && fetchedPosts.length > 0) {
           // Map posts to match our interface
@@ -43,7 +41,6 @@ const Blog = () => {
           
           setBlogPosts(mappedPosts);
         } else {
-          console.log('No blog posts found');
           setBlogPosts([]);
         }
       } catch (error) {
@@ -59,7 +56,6 @@ const Blog = () => {
     // Set up refresh when storage event is triggered
     const handleStorageEvent = (event: StorageEvent) => {
       if (event.key === 'blog_updated') {
-        console.log('Blog update detected, refreshing...');
         loadBlogPosts();
       }
     };

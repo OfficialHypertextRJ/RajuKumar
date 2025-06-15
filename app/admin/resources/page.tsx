@@ -792,7 +792,7 @@ const ResourcesAdmin = () => {
           <DialogContent>
             <Box component="form" noValidate sx={{ mt: 2 }}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Category Name"
                     id="name"
@@ -802,7 +802,7 @@ const ResourcesAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Description"
                     id="description"
@@ -843,7 +843,7 @@ const ResourcesAdmin = () => {
           <DialogContent>
             <Box component="form" noValidate sx={{ mt: 2 }}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <FormControl fullWidth>
                     <InputLabel id="category-select-label">Category</InputLabel>
                     <Select
@@ -863,7 +863,7 @@ const ResourcesAdmin = () => {
                   </FormControl>
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Item Title"
                     id="title"
@@ -873,7 +873,7 @@ const ResourcesAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Description"
                     id="description"
@@ -884,7 +884,7 @@ const ResourcesAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Link (URL)"
                     id="link"
@@ -894,7 +894,7 @@ const ResourcesAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Resource Icon/Image
                   </Typography>

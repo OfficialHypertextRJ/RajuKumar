@@ -502,7 +502,7 @@ const ProjectsAdmin = () => {
             <Grid container spacing={3}>
               {projects.length > 0 ? (
                 projects.map((project) => (
-                  <Grid item xs={12} sm={6} md={4} key={project.id}>
+                  <Grid sx={{ gridColumn: { xs: 'span 12', sm: 'span 6', md: 'span 4' } }} key={project.id}>
                     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                       <CardMedia
                         component="img"
@@ -558,7 +558,7 @@ const ProjectsAdmin = () => {
                   </Grid>
                 ))
               ) : (
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <Paper sx={{ p: 3, textAlign: 'center' }}>
                     <Typography variant="body1" color="text.secondary">
                       No projects added yet. Click the "Add New Project" button to create your first project.
@@ -642,7 +642,7 @@ const ProjectsAdmin = () => {
           <DialogContent>
             <Box component="form" noValidate sx={{ mt: 2 }}>
               <Grid container spacing={3}>
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Project Title"
                     id="title"
@@ -652,7 +652,7 @@ const ProjectsAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Description"
                     id="description"
@@ -664,31 +664,25 @@ const ProjectsAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }}>
                   <AdminFormField
                     label="GitHub Link"
                     id="github"
                     value={formData.github}
                     onChange={handleInputChange}
-                    InputProps={{
-                      startAdornment: <GitHubIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    }}
                   />
                 </Grid>
                 
-                <Grid item xs={12} sm={6}>
+                <Grid sx={{ gridColumn: { xs: 'span 12', sm: 'span 6' } }}>
                   <AdminFormField
                     label="Demo Link"
                     id="demo"
                     value={formData.demo}
                     onChange={handleInputChange}
-                    InputProps={{
-                      startAdornment: <LinkIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    }}
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <AdminFormField
                     label="Tags (comma separated)"
                     id="tags"
@@ -698,7 +692,7 @@ const ProjectsAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -712,7 +706,7 @@ const ProjectsAdmin = () => {
                   />
                 </Grid>
                 
-                <Grid item xs={12}>
+                <Grid sx={{ gridColumn: 'span 12' }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Project Images
                   </Typography>
@@ -730,7 +724,7 @@ const ProjectsAdmin = () => {
                       if (!shouldShow) return null;
                       
                       return (
-                      <Grid item xs={12} sm={4} key={index}>
+                      <Grid sx={{ gridColumn: { xs: 'span 12', sm: 'span 4' } }} key={index}>
                         <Box
                           sx={{
                             width: '100%',

@@ -149,14 +149,12 @@ export default function BlogPostPage() {
 
       try {
         setLoading(true);
-        console.log(`Fetching blog post with ID: ${postId}`);
         
         const docRef = doc(db, 'blog', postId);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          console.log('Blog post found:', data.title);
           
           setBlogPost({
             id: docSnap.id,
@@ -170,7 +168,6 @@ export default function BlogPostPage() {
           
           setError(null);
         } else {
-          console.log('Blog post not found');
           setError('Blog post not found');
           setBlogPost(null);
         }
