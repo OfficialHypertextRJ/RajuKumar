@@ -105,6 +105,34 @@ const loadFontAwesomeScript = `
   })();
 `;
 
+// Preload key API data for faster navigation
+const preloadDataScript = `
+  (function() {
+    // Prefetch about page data
+    function prefetchData() {
+      try {
+        // Prefetch the about data in background
+        fetch('/api/about')
+          .then(response => {
+            if (!response.ok) throw new Error('Failed to prefetch about data');
+            return response.json();
+          })
+          .then(data => {
+            // Store in sessionStorage for immediate access
+            sessionStorage.setItem('prefetched_about_data', JSON.stringify(data));
+            sessionStorage.setItem('prefetched_about_timestamp', Date.now().toString());
+          })
+          .catch(error => console.error('Error prefetching about data:', error));
+      } catch(e) {
+        console.error('Error in prefetch script:', e);
+      }
+    }
+    
+    // Run after a short delay to prioritize main page load
+    setTimeout(prefetchData, 2000);
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: {
@@ -122,6 +150,11 @@ export default function RootLayout({
         {/* Load Font Awesome asynchronously */}
         <Script id="load-fontawesome" strategy="afterInteractive">
           {loadFontAwesomeScript}
+        </Script>
+        
+        {/* Preload key API data */}
+        <Script id="preload-data" strategy="afterInteractive">
+          {preloadDataScript}
         </Script>
         
         <style dangerouslySetInnerHTML={{ __html: `

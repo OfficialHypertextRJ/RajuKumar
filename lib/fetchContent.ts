@@ -133,6 +133,26 @@ export async function fetchLatestBlogPosts() {
 export async function fetchAboutContent() {
   return getCachedData('about-content', async () => {
     try {
+      // Check if we have prefetched data in sessionStorage (client-side only)
+      if (typeof window !== 'undefined') {
+        const prefetchedData = sessionStorage.getItem('prefetched_about_data');
+        const timestamp = sessionStorage.getItem('prefetched_about_timestamp');
+        
+        // Use prefetched data if it's not too old (less than 30 minutes)
+        if (prefetchedData && timestamp) {
+          const now = Date.now();
+          const prefetchTime = parseInt(timestamp, 10);
+          const timeDiff = now - prefetchTime;
+          
+          // If prefetched data is less than 30 minutes old, use it
+          if (timeDiff < 30 * 60 * 1000) {
+            console.log('Using prefetched about data');
+            return JSON.parse(prefetchedData);
+          }
+        }
+      }
+      
+      // Otherwise fetch from database
       const aboutDocRef = doc(db, 'content', 'about');
       const aboutDoc = await getDoc(aboutDocRef);
       

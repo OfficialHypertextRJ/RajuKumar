@@ -9,6 +9,7 @@ import { FaGithub, FaLinkedin } from 'react-icons/fa';
 import { MdEmail } from 'react-icons/md';
 import { useMediaQuery, useTheme } from '@mui/material';
 import { IoClose } from 'react-icons/io5';
+import { fetchAboutContent } from '@/lib/fetchContent';
 
 interface AboutData {
   name: string;
@@ -63,11 +64,7 @@ export default function AboutPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/about');
-        if (!response.ok) {
-          throw new Error('Failed to fetch about data');
-        }
-        const data = await response.json();
+        const data = await fetchAboutContent();
         setAboutData(data);
       } catch (error) {
         console.error('Error fetching about data:', error);
