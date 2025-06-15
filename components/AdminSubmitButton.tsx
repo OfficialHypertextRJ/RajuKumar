@@ -2,21 +2,28 @@ import React from 'react';
 
 interface AdminSubmitButtonProps {
   label: string;
-  isLoading: boolean;
+  isLoading?: boolean;
+  saving?: boolean;
   loadingLabel?: string;
   onClick?: () => void;
   type?: 'button' | 'submit' | 'reset';
   variant?: 'primary' | 'secondary' | 'danger';
+  disabled?: boolean;
 }
 
 export default function AdminSubmitButton({
   label,
   isLoading,
+  saving,
   loadingLabel = 'Saving...',
   onClick,
   type = 'submit',
-  variant = 'primary'
+  variant = 'primary',
+  disabled = false
 }: AdminSubmitButtonProps) {
+  // Support both isLoading and saving props for backward compatibility
+  const loading = isLoading || saving;
+  
   const baseClasses = "px-6 py-3 font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed";
   
   const variantClasses = {
@@ -29,10 +36,10 @@ export default function AdminSubmitButton({
     <button
       type={type}
       onClick={onClick}
-      disabled={isLoading}
+      disabled={loading || disabled}
       className={`${baseClasses} ${variantClasses[variant]}`}
     >
-      {isLoading ? loadingLabel : label}
+      {loading ? loadingLabel : label}
     </button>
   );
 } 
