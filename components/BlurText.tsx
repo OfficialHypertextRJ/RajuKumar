@@ -39,7 +39,7 @@ const BlurText: React.FC<BlurTextProps> = ({
   const getVariants = (direction: string): Variants => {
     const hidden: AnimationVariant = {
       opacity: 0,
-      filter: "blur(10px)",
+      filter: "blur(5px)",
     };
     
     const visible: AnimationVariant = {
@@ -50,23 +50,23 @@ const BlurText: React.FC<BlurTextProps> = ({
     // Add directional movement based on the direction
     switch (direction) {
       case 'top':
-        hidden.y = -20;
+        hidden.y = -10;
         visible.y = 0;
         break;
       case 'bottom':
-        hidden.y = 20;
+        hidden.y = 10;
         visible.y = 0;
         break;
       case 'left':
-        hidden.x = -20;
+        hidden.x = -10;
         visible.x = 0;
         break;
       case 'right':
-        hidden.x = 20;
+        hidden.x = 10;
         visible.x = 0;
         break;
       default:
-        hidden.y = 20;
+        hidden.y = 10;
         visible.y = 0;
     }
 
@@ -79,19 +79,44 @@ const BlurText: React.FC<BlurTextProps> = ({
   const variants = getVariants(direction);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const startAnimation = async () => {
-      await controls.start('visible');
-      setAnimationDone(true);
-      if (onAnimationComplete) {
-        onAnimationComplete();
+      if (!isMounted) return;
+      
+      // Check for reduced motion preference
+      const prefersReducedMotion = typeof window !== 'undefined' && 
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      
+      if (prefersReducedMotion) {
+        // Skip animation for users who prefer reduced motion
+        controls.set('visible');
+        setAnimationDone(true);
+        if (onAnimationComplete) {
+          onAnimationComplete();
+        }
+      } else {
+        await controls.start('visible');
+        if (isMounted) {
+          setAnimationDone(true);
+          if (onAnimationComplete) {
+            onAnimationComplete();
+          }
+        }
       }
     };
 
-    startAnimation();
+    // Small delay to ensure component is mounted
+    const timer = setTimeout(startAnimation, 10);
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
   }, [controls, onAnimationComplete]);
 
   return (
-    <div className={className}>
+    <span className={className}>
       {elements.map((element, index) => (
         <motion.span
           key={index}
@@ -101,18 +126,21 @@ const BlurText: React.FC<BlurTextProps> = ({
           variants={variants}
           transition={{
             delay: index * (delay / 1000),
-            duration: 0.7,
+            duration: 0.5,
             ease: [0.2, 0.65, 0.3, 0.9],
           }}
           className="inline-block hover:text-[#3bcf9a] transition-colors duration-300"
-          style={{ marginRight: animateBy === 'letters' ? '0px' : '0.25em' }}
+          style={{ 
+            marginRight: animateBy === 'letters' ? '0px' : '0.25em',
+            willChange: 'transform, opacity',
+          }}
         >
           {element}
           {animateBy === 'letters' && element === ' ' ? '\u00A0' : ''}
         </motion.span>
       ))}
-    </div>
+    </span>
   );
 };
 
-export default BlurText; 
+export default React.memo(BlurText); 

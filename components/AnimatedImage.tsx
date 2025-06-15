@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { getOptimizedImageUrl, getBlurDataUrl, getImageSizes } from '@/lib/imageOptimization';
@@ -24,20 +24,30 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({
   width = 800,
   quality = 75,
 }) => {
-  // Animation variants for the blur effect - reduced duration for faster display
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
+  
+  // Check for reduced motion preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setIsReducedMotion(prefersReducedMotion);
+    }
+  }, []);
+
+  // Animation variants for the blur effect - simplified for performance
   const variants = {
     hidden: {
       opacity: 0,
-      filter: 'blur(8px)',
-      scale: 1.03,
+      filter: isReducedMotion ? 'blur(0px)' : 'blur(5px)',
+      scale: isReducedMotion ? 1 : 1.02,
     },
     visible: {
       opacity: 1,
       filter: 'blur(0px)',
       scale: 1,
       transition: {
-        delay: Math.min(index * 0.1, 0.3), // Cap the delay to prevent slow loading
-        duration: 0.5, // Reduced from 1s to 0.5s for faster animation
+        delay: isReducedMotion ? 0 : Math.min(index * 0.05, 0.15), // Reduced delay
+        duration: isReducedMotion ? 0.1 : 0.3, // Reduced duration
         ease: [0.2, 0.65, 0.3, 0.9],
       }
     }
@@ -52,6 +62,7 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({
       initial="hidden"
       animate="visible"
       variants={variants}
+      style={{ willChange: 'transform, opacity' }}
     >
       <Image
         src={optimizedSrc}
@@ -67,6 +78,8 @@ const AnimatedImage: React.FC<AnimatedImageProps> = ({
         placeholder="blur"
         blurDataURL={getBlurDataUrl()}
         className="bg-[#0d0d0d]"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : 'auto'}
       />
     </motion.div>
   );

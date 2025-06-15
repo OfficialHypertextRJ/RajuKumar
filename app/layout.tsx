@@ -1,27 +1,49 @@
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Roboto, Archivo_Black } from 'next/font/google';
 import ThemeRegistry from '@/components/ThemeRegistry';
 import MouseGradientBackground from '@/components/MouseGradientBackground';
 import { Toaster } from 'react-hot-toast';
+import Script from 'next/script';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+// Optimize font loading
+const inter = Inter({ 
+  subsets: ['latin'], 
+  variable: '--font-inter',
+  display: 'swap',
+  preload: true,
+});
+
 const roboto = Roboto({
-  weight: ['300', '400', '500', '700'],
+  weight: ['400', '500', '700'], // Reduced font weights
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-roboto',
+  preload: true,
 });
+
 const archivoBlack = Archivo_Black({
   weight: ['400'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-archivo-black',
+  preload: true,
 });
 
 export const metadata: Metadata = {
   title: 'Raju Kumar',
   description: 'My professional portfolio showcasing my skills and projects',
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+    'mobile-web-app-capable': 'yes',
+  }
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: '#0d0d0d',
 };
 
 // Preload script to prevent flash of white background
@@ -40,7 +62,46 @@ const preloadScript = `
         document.documentElement.style.transition = 'none';
         document.body.style.transition = 'none';
       }
+      
+      // Add passive event listeners for better scrolling performance
+      if (typeof window !== 'undefined') {
+        // Test passive event listener support
+        let supportsPassive = false;
+        try {
+          const opts = Object.defineProperty({}, 'passive', {
+            get: function() { supportsPassive = true; return true; }
+          });
+          window.addEventListener('testPassive', null, opts);
+          window.removeEventListener('testPassive', null, opts);
+        } catch (e) {}
+        
+        // Apply passive listeners to touch and wheel events
+        if (supportsPassive) {
+          const wheelOpt = supportsPassive ? { passive: true } : false;
+          const wheelEvent = 'onwheel' in document.createElement('div') ? 'wheel' : 'mousewheel';
+          
+          window.addEventListener('touchstart', function(){}, wheelOpt);
+          window.addEventListener('touchmove', function(){}, wheelOpt);
+          window.addEventListener(wheelEvent, function(){}, wheelOpt);
+        }
+      }
     } catch(e) {}
+  })();
+`;
+
+// Script to load font awesome asynchronously
+const loadFontAwesomeScript = `
+  (function() {
+    function loadCSS(href) {
+      var link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = href;
+      document.head.appendChild(link);
+    }
+    
+    // Load Font Awesome CSS files
+    loadCSS('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css');
+    loadCSS('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css');
   })();
 `;
 
@@ -52,15 +113,24 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${roboto.variable} ${inter.variable} ${archivoBlack.variable}`}>
       <head>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
+        {/* Preconnect to CDN */}
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+        
         {/* Preload script to prevent flash */}
         <script dangerouslySetInnerHTML={{ __html: preloadScript }} />
+        
+        {/* Load Font Awesome asynchronously */}
+        <Script id="load-fontawesome" strategy="afterInteractive">
+          {loadFontAwesomeScript}
+        </Script>
+        
         <style dangerouslySetInnerHTML={{ __html: `
           html, body {
             background-color: rgb(13, 13, 13) !important;
             margin: 0;
             padding: 0;
             transition: background-color 0ms;
+            overscroll-behavior-y: none;
           }
           
           body::before {
@@ -83,6 +153,18 @@ export default function RootLayout({
           body {
             animation: fadeIn 0.3s ease-out;
             animation-fill-mode: forwards;
+            text-rendering: optimizeSpeed;
+            -webkit-font-smoothing: antialiased;
+          }
+          
+          /* Optimize scrolling */
+          * {
+            -webkit-overflow-scrolling: touch;
+          }
+          
+          /* Use hardware acceleration where possible */
+          .will-change-transform {
+            will-change: transform;
           }
         `}} />
       </head>

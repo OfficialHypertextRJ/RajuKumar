@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { fetchHeroContent } from '@/lib/fetchContent';
 import BlurText from "./BlurText";
 import AnimatedImage from "./AnimatedImage";
@@ -35,10 +35,27 @@ const Hero = () => {
   const [content, setContent] = useState<HeroContent>(defaultContent);
   const [loading, setLoading] = useState(true);
   const [textAnimationComplete, setTextAnimationComplete] = useState(false);
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const heroRef = useRef<HTMLElement>(null);
 
   const handleAnimationComplete = () => {
     setTextAnimationComplete(true);
   };
+
+  // Check for reduced motion preference
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setIsReducedMotion(prefersReducedMotion);
+      
+      // If user prefers reduced motion, skip animations
+      if (prefersReducedMotion) {
+        setIsVisible(true);
+        setAnimationComplete(true);
+        setTextAnimationComplete(true);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     // Fetch content from Firebase
@@ -58,18 +75,24 @@ const Hero = () => {
           });
         }
       } catch (error) {
-        console.error("Error loading hero content:", error);
         // Use default content on error
       } finally {
         setLoading(false);
-        // Start animation immediately after content is loaded
-        setTimeout(() => setIsVisible(true), 100);
-        setTimeout(() => setAnimationComplete(true), 3000);
+        
+        // Skip animations for reduced motion
+        if (isReducedMotion) {
+          setIsVisible(true);
+          setAnimationComplete(true);
+        } else {
+          // Start animation with shorter delays for better performance
+          setTimeout(() => setIsVisible(true), 50);
+          setTimeout(() => setAnimationComplete(true), 1500);
+        }
       }
     };
     
     loadContent();
-  }, []);
+  }, [isReducedMotion]);
 
   // Show a simple loading state
   if (loading) {
@@ -88,9 +111,16 @@ const Hero = () => {
 
   return (
     <main className="px-4 max-w-6x2 mx-auto flex-grow pt-6 md:pt-10">
-      <section id="home" className="mt-1 md:mt-10 max-w-3xl ml-0 mr-auto md:ml-20 lg:ml-96">
+      <section 
+        ref={heroRef}
+        id="home" 
+        className="mt-1 md:mt-10 max-w-3xl ml-0 mr-auto md:ml-20 lg:ml-96 gpu"
+      >
         {/* Whole section wrapper with subtle fade-in */}
-        <div className={`transition-opacity duration-1000 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+        <div 
+          className={`transition-opacity duration-700 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+          style={{ willChange: isVisible ? 'auto' : 'opacity' }}
+        >
           {/* Heading with blur text animation */}
           <div className="relative overflow-hidden">
             <div className={`text-[2.95rem] sm:text-3xl md:text-[3.5rem] font-extrabold leading-tight md:leading-[1.05] mb-6 ${animationComplete ? 'text-blod' : ''} font-archivo`}>
@@ -98,7 +128,7 @@ const Hero = () => {
               <div className="md:hidden">
                 <BlurText
                   text={content.heading}
-                  delay={150}
+                  delay={isReducedMotion ? 0 : 100}
                   animateBy="words"
                   direction="top"
                   onAnimationComplete={handleAnimationComplete}
@@ -108,7 +138,7 @@ const Hero = () => {
               <div className="hidden md:block">
                 <BlurText
                   text={content.heading}
-                  delay={150}
+                  delay={isReducedMotion ? 0 : 100}
                   animateBy="words"
                   direction="top"
                   onAnimationComplete={handleAnimationComplete}
@@ -120,7 +150,7 @@ const Hero = () => {
                 <div className="block text-[1.5rem] md:text-[2rem] text-gray-400 mt-2">
                   <BlurText
                     text={content.subheading}
-                    delay={200}
+                    delay={isReducedMotion ? 0 : 150}
                     animateBy="words"
                     direction="top"
                     className="text-gray-400"
@@ -129,8 +159,12 @@ const Hero = () => {
               )}
             </div>
             <div 
-              className={`absolute top-0 left-0 w-full h-full bg-[#0d0d0d] transform transition-all duration-1000 ease-in-out ${isVisible ? 'translate-x-full' : 'translate-x-0'}`}
-              style={{ backgroundColor: '#0d0d0d', zIndex: 1 }}
+              className={`absolute top-0 left-0 w-full h-full bg-[#0d0d0d] transform transition-all duration-700 ease-in-out ${isVisible ? 'translate-x-full' : 'translate-x-0'}`}
+              style={{ 
+                backgroundColor: '#0d0d0d', 
+                zIndex: 1,
+                willChange: isVisible ? 'auto' : 'transform'
+              }}
             ></div>
           </div>
           
@@ -139,15 +173,20 @@ const Hero = () => {
             <div className="text-gray-400 text-[1.30rem] mb-6 md:mb-6 max-w-xl text-left">
               <BlurText
                 text={content.description}
-                delay={150}
+                delay={isReducedMotion ? 0 : 100}
                 animateBy="words"
                 direction="top"
                 className="text-gray-400 text-[1.30rem]"
               />
             </div>
             <div 
-              className={`absolute top-0 left-0 w-full h-full bg-[#0d0d0d] transform transition-all duration-1000 ease-in-out ${isVisible ? 'translate-x-full' : 'translate-x-0'}`}
-              style={{ transitionDelay: isVisible ? '300ms' : '0ms', backgroundColor: '#0d0d0d', zIndex: 1 }}
+              className={`absolute top-0 left-0 w-full h-full bg-[#0d0d0d] transform transition-all duration-700 ease-in-out ${isVisible ? 'translate-x-full' : 'translate-x-0'}`}
+              style={{ 
+                transitionDelay: isVisible ? '200ms' : '0ms', 
+                backgroundColor: '#0d0d0d', 
+                zIndex: 1,
+                willChange: isVisible ? 'auto' : 'transform'
+              }}
             ></div>
           </div>
           
@@ -158,11 +197,11 @@ const Hero = () => {
                 {content.images.map((image, index) => (
                   <div className="w-1/3 overflow-hidden relative" key={index}>
                     <AnimatedImage 
-                        src={image} 
-                        alt={`Portfolio image ${index + 1}`}
-                        priority={true}
+                      src={image} 
+                      alt={`Portfolio image ${index + 1}`}
+                      priority={index === 0} // Only prioritize the first image
                       index={index}
-                      />
+                    />
                   </div>
                 ))}
               </div>
@@ -174,7 +213,7 @@ const Hero = () => {
             <div className="flex flex-wrap gap-2">
               <Link 
                 href={content.buttonLink}
-                className="group inline-flex items-center text-white text-[0.85rem] font-semibold rounded-full px-4 py-2 bg-transparent border border-white/20 hover:border-white/40 hover:pr-6 transition-all duration-700" 
+                className="group inline-flex items-center text-white text-[0.85rem] font-semibold rounded-full px-4 py-2 bg-transparent border border-white/20 hover:border-white/40 hover:pr-6 transition-all duration-500" 
               >
                 <Image 
                   alt="User avatar icon" 
@@ -185,12 +224,17 @@ const Hero = () => {
                   priority={true}
                 />
                 <span>{content.buttonText}</span>
-                <i className="fas fa-long-arrow-alt-right text-[1rem] opacity-0 group-hover:opacity-100 -ml-1 group-hover:ml-4 transition-all duration-700"></i>
+                <i className="fas fa-long-arrow-alt-right text-[1rem] opacity-0 group-hover:opacity-100 -ml-1 group-hover:ml-4 transition-all duration-500"></i>
               </Link>
             </div>
             <div 
-              className={`absolute top-0 left-0 w-full h-full bg-[#0d0d0d] transform transition-all duration-1000 ease-in-out ${isVisible ? 'translate-x-full' : 'translate-x-0'}`}
-              style={{ transitionDelay: isVisible ? '450ms' : '0ms', backgroundColor: '#0d0d0d', zIndex: 1 }}
+              className={`absolute top-0 left-0 w-full h-full bg-[#0d0d0d] transform transition-all duration-700 ease-in-out ${isVisible ? 'translate-x-full' : 'translate-x-0'}`}
+              style={{ 
+                transitionDelay: isVisible ? '300ms' : '0ms', 
+                backgroundColor: '#0d0d0d', 
+                zIndex: 1,
+                willChange: isVisible ? 'auto' : 'transform'
+              }}
             ></div>
           </div>
         </div>
@@ -216,4 +260,4 @@ const Hero = () => {
   );
 };
 
-export default Hero; 
+export default React.memo(Hero); // Memoize the component to prevent unnecessary re-renders 

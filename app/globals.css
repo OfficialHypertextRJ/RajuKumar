@@ -12,6 +12,8 @@
     scroll-behavior: smooth;
     background-color: rgb(13, 13, 13) !important;
     color-scheme: dark;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
   }
   
   body {
@@ -19,6 +21,8 @@
     font-family: 'Inter', sans-serif;
     background-color: rgb(13, 13, 13) !important;
     color: #ffffff;
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* Force dark background */
@@ -32,6 +36,21 @@
     height: 100%;
     background-color: rgb(13, 13, 13);
     z-index: -10;
+    will-change: transform;
+  }
+  
+  /* Optimize animations */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -51,6 +70,7 @@
   .section {
     @apply py-16 md:py-24;
     background: transparent !important;
+    will-change: transform;
   }
   
   .heading {
@@ -74,5 +94,21 @@
   .hide-scrollbar {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+  }
+  
+  /* Performance optimizations */
+  .gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+  
+  .optimize-animation {
+    will-change: transform, opacity;
+  }
+  
+  /* Optimize image rendering */
+  img {
+    image-rendering: auto;
   }
 }

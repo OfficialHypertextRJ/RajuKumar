@@ -13,6 +13,7 @@ const MouseGradientBackground = () => {
   const innerGradientRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isReducedMotion, setIsReducedMotion] = useState(false);
 
   // Apply styles immediately
   useEffect(() => {
@@ -30,6 +31,10 @@ const MouseGradientBackground = () => {
         }
       `;
       document.head.appendChild(style);
+      
+      // Check for reduced motion preference
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setIsReducedMotion(prefersReducedMotion);
     }
     
     // Set loaded state after a small delay to ensure smooth transition
@@ -65,7 +70,14 @@ const MouseGradientBackground = () => {
       applyInitialStyles();
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
+
+    // If user prefers reduced motion, don't animate
+    if (isReducedMotion) {
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
+    }
 
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
@@ -76,14 +88,9 @@ const MouseGradientBackground = () => {
     let innerX = window.innerWidth / 2;
     let innerY = window.innerHeight / 2;
     
-    // Position history for super smooth movement
-    const positionHistory: {x: number, y: number}[] = [];
-    const historyMaxLength = 10;
-    
-    // Initialize history
-    for (let i = 0; i < historyMaxLength; i++) {
-      positionHistory.push({x: mouseX, y: mouseY});
-    }
+    // Simplified position tracking
+    let lastMouseX = mouseX;
+    let lastMouseY = mouseY;
     
     // Add velocity for smoother movement
     let outerVelocityX = 0;
@@ -91,147 +98,57 @@ const MouseGradientBackground = () => {
     let innerVelocityX = 0;
     let innerVelocityY = 0;
     
-    // Keep track of previous velocities for smoothing
-    const outerVelocityHistory = {x: [0, 0, 0], y: [0, 0, 0]};
-    const innerVelocityHistory = {x: [0, 0, 0], y: [0, 0, 0]};
-    
     // Set initial position for gradients
     outerGradientRef.current.style.left = `${outerX - 700}px`;
     outerGradientRef.current.style.top = `${outerY - 700}px`;
     innerGradientRef.current.style.left = `${innerX - 400}px`;
     innerGradientRef.current.style.top = `${innerY - 400}px`;
     
-    // Update mouse position history for smoother movement
-    const updateHistory = (x: number, y: number) => {
-      // Add new position to history
-      positionHistory.unshift({x, y});
-      
-      // Remove oldest history if too long
-      if (positionHistory.length > historyMaxLength) {
-        positionHistory.pop();
-      }
-      
-      // Calculate weighted average position
-      let totalX = 0;
-      let totalY = 0;
-      let totalWeight = 0;
-      
-      for (let i = 0; i < positionHistory.length; i++) {
-        // Weight decreases with age (newer positions have more influence)
-        const weight = positionHistory.length - i;
-        totalX += positionHistory[i].x * weight;
-        totalY += positionHistory[i].y * weight;
-        totalWeight += weight;
-      }
-      
-      return {
-        x: totalX / totalWeight,
-        y: totalY / totalWeight
-      };
-    };
-    
-    // Track mouse position directly
+    // Track mouse position with passive listener
     const handleMouseMove = (e: MouseEvent) => {
       // Update cursor position
       mouseX = e.clientX;
       mouseY = e.clientY;
       
-      // Update history
-      updateHistory(mouseX, mouseY);
+      // Simple smoothing
+      lastMouseX = mouseX;
+      lastMouseY = mouseY;
     };
     
-    // Update velocity history for even smoother movement
-    const updateVelocityHistory = (velocityHistory: {x: number[], y: number[]}, newVelocityX: number, newVelocityY: number) => {
-      // Add new velocities
-      velocityHistory.x.unshift(newVelocityX);
-      velocityHistory.y.unshift(newVelocityY);
-      
-      // Remove oldest if too long
-      if (velocityHistory.x.length > 3) {
-        velocityHistory.x.pop();
-        velocityHistory.y.pop();
-      }
-      
-      // Calculate weighted average
-      let totalX = 0;
-      let totalY = 0;
-      let totalWeight = 0;
-      
-      for (let i = 0; i < velocityHistory.x.length; i++) {
-        const weight = velocityHistory.x.length - i;
-        totalX += velocityHistory.x[i] * weight;
-        totalY += velocityHistory.y[i] * weight;
-        totalWeight += weight;
-      }
-      
-      return {
-        x: totalX / totalWeight,
-        y: totalY / totalWeight
-      };
-    };
-
-    // Animate gradients with ultra-smooth physics
+    // Animate gradients with simplified physics
+    let animationFrameId: number;
+    
     const animateGradient = () => {
       if (!outerGradientRef.current || !innerGradientRef.current) return;
       
-      // Get smoothed mouse position
-      const smoothedPosition = updateHistory(mouseX, mouseY);
-      
       // Physics for outer gradient (slower, smoother)
-      const outerFriction = 0.15; // Lower friction for smoother movement
-      const outerAttraction = 0.05; // Lower attraction for smoother movement
+      const outerFriction = 0.85; // Higher friction for less CPU usage
+      const outerAttraction = 0.05;
       
       // Physics for inner gradient (slightly faster)
-      const innerFriction = 0.08; // Very low friction for ultra-smooth movement
-      const innerAttraction = 0.07; // Low attraction for smoother movement
+      const innerFriction = 0.92; // Higher friction for less CPU usage
+      const innerAttraction = 0.07;
       
-      // Calculate distance to smoothed cursor
-      const outerDistanceX = smoothedPosition.x - outerX;
-      const outerDistanceY = smoothedPosition.y - outerY;
-      const innerDistanceX = smoothedPosition.x - innerX;
-      const innerDistanceY = smoothedPosition.y - innerY;
+      // Calculate distance to cursor
+      const outerDistanceX = lastMouseX - outerX;
+      const outerDistanceY = lastMouseY - outerY;
+      const innerDistanceX = lastMouseX - innerX;
+      const innerDistanceY = lastMouseY - innerY;
       
-      // Apply physics for outer gradient
-      let newOuterVelocityX = outerVelocityX * outerFriction + outerDistanceX * outerAttraction;
-      let newOuterVelocityY = outerVelocityY * outerFriction + outerDistanceY * outerAttraction;
-      
-      // Apply physics for inner gradient
-      let newInnerVelocityX = innerVelocityX * innerFriction + innerDistanceX * innerAttraction;
-      let newInnerVelocityY = innerVelocityY * innerFriction + innerDistanceY * innerAttraction;
-      
-      // Apply super smooth velocity using velocity history
-      const smoothedOuterVelocity = updateVelocityHistory(outerVelocityHistory, newOuterVelocityX, newOuterVelocityY);
-      const smoothedInnerVelocity = updateVelocityHistory(innerVelocityHistory, newInnerVelocityX, newInnerVelocityY);
-      
-      outerVelocityX = smoothedOuterVelocity.x;
-      outerVelocityY = smoothedOuterVelocity.y;
-      innerVelocityX = smoothedInnerVelocity.x;
-      innerVelocityY = smoothedInnerVelocity.y;
+      // Apply simplified physics
+      outerVelocityX = outerVelocityX * outerFriction + outerDistanceX * outerAttraction;
+      outerVelocityY = outerVelocityY * outerFriction + outerDistanceY * outerAttraction;
+      innerVelocityX = innerVelocityX * innerFriction + innerDistanceX * innerAttraction;
+      innerVelocityY = innerVelocityY * innerFriction + innerDistanceY * innerAttraction;
       
       // Apply speed limits for stability
       const maxOuterSpeed = 10;
       const maxInnerSpeed = 15;
       
-      const outerSpeedX = Math.abs(outerVelocityX);
-      const outerSpeedY = Math.abs(outerVelocityY);
-      const innerSpeedX = Math.abs(innerVelocityX);
-      const innerSpeedY = Math.abs(innerVelocityY);
-      
-      if (outerSpeedX > maxOuterSpeed) {
-        outerVelocityX = (outerVelocityX / outerSpeedX) * maxOuterSpeed;
-      }
-      
-      if (outerSpeedY > maxOuterSpeed) {
-        outerVelocityY = (outerVelocityY / outerSpeedY) * maxOuterSpeed;
-      }
-      
-      if (innerSpeedX > maxInnerSpeed) {
-        innerVelocityX = (innerVelocityX / innerSpeedX) * maxInnerSpeed;
-      }
-      
-      if (innerSpeedY > maxInnerSpeed) {
-        innerVelocityY = (innerVelocityY / innerSpeedY) * maxInnerSpeed;
-      }
+      outerVelocityX = Math.max(Math.min(outerVelocityX, maxOuterSpeed), -maxOuterSpeed);
+      outerVelocityY = Math.max(Math.min(outerVelocityY, maxOuterSpeed), -maxOuterSpeed);
+      innerVelocityX = Math.max(Math.min(innerVelocityX, maxInnerSpeed), -maxInnerSpeed);
+      innerVelocityY = Math.max(Math.min(innerVelocityY, maxInnerSpeed), -maxInnerSpeed);
       
       // Update gradient positions
       outerX += outerVelocityX;
@@ -239,29 +156,25 @@ const MouseGradientBackground = () => {
       innerX += innerVelocityX;
       innerY += innerVelocityY;
       
-      // Apply positions to DOM with smoothing (adjusted for smaller size)
-      outerGradientRef.current.style.left = `${outerX - 700}px`;
-      outerGradientRef.current.style.top = `${outerY - 700}px`;
-      innerGradientRef.current.style.left = `${innerX - 400}px`;
-      innerGradientRef.current.style.top = `${innerY - 400}px`;
+      // Apply positions with transform instead of left/top for better performance
+      outerGradientRef.current.style.transform = `translate3d(${outerX - 700}px, ${outerY - 700}px, 0)`;
+      innerGradientRef.current.style.transform = `translate3d(${innerX - 400}px, ${innerY - 400}px, 0)`;
       
       // Continue animation loop
-      requestAnimationFrame(animateGradient);
+      animationFrameId = requestAnimationFrame(animateGradient);
     };
-    
-    // Add event listeners
-    window.addEventListener("mousemove", handleMouseMove);
-    
-    // Start animation loop
-    const animationFrame = requestAnimationFrame(animateGradient);
 
-    // Clean up
+    // Start animation
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    animationFrameId = requestAnimationFrame(animateGradient);
+
+    // Cleanup
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrame);
+      cancelAnimationFrame(animationFrameId);
     };
-  }, []);
+  }, [isReducedMotion]);
 
   return (
     <>
@@ -291,21 +204,9 @@ const MouseGradientBackground = () => {
       `}</style>
       <div
         ref={containerRef}
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          pointerEvents: "none",
-          zIndex: -1,
-          overflow: "hidden",
-          backdropFilter: "blur(100px)",
-          WebkitBackdropFilter: "blur(100px)",
-          backgroundColor: "rgb(13, 13, 13)",
-          opacity: isLoaded ? 0.9 : 0,
-          transition: "opacity 0.3s ease-in",
-        }}
+        className="fixed inset-0 w-full h-full overflow-hidden pointer-events-none z-[-1]"
+        aria-hidden="true"
+        style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.5s ease-in-out' }}
       >
         <div className="blur-overlay" style={{
           position: "absolute",
@@ -318,32 +219,23 @@ const MouseGradientBackground = () => {
           zIndex: 1
         }} />
       
+        {/* Outer gradient - larger, more subtle */}
         <div
           ref={outerGradientRef}
+          className="absolute w-[1400px] h-[1400px] rounded-full"
           style={{
-            position: "absolute",
-            width: "1400px",
-            height: "1400px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(56, 178, 172, 0.06) 0%, rgba(56, 178, 172, 0) 65%)",
-            mixBlendMode: "screen",
-            filter: "blur(140px)",
-            WebkitFilter: "blur(140px)",
-            opacity: 0.8,
+            background: 'radial-gradient(circle, rgba(59, 207, 154, 0.03) 0%, rgba(13, 13, 13, 0) 70%)',
+            willChange: 'transform',
           }}
         />
+        
+        {/* Inner gradient - smaller, more vibrant */}
         <div
           ref={innerGradientRef}
+          className="absolute w-[800px] h-[800px] rounded-full"
           style={{
-            position: "absolute",
-            width: "800px",
-            height: "800px",
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0) 65%)",
-            mixBlendMode: "screen",
-            filter: "blur(100px)",
-            WebkitFilter: "blur(100px)",
-            opacity: 0.8,
+            background: 'radial-gradient(circle, rgba(59, 207, 154, 0.07) 0%, rgba(13, 13, 13, 0) 70%)',
+            willChange: 'transform',
           }}
         />
       </div>
